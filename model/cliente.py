@@ -12,6 +12,7 @@ class Cliente(Base):
     nome_corretor = Column(String(140), ForeignKey('corretor.nome_corretor'), nullable=False)
 
     def __init__(self, nome, cpf, telefone, nome_corretor):
+        super().__init__()
         self.nome = nome
         self.cpf = cpf
         self.telefone = telefone

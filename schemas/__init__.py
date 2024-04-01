@@ -1,0 +1,1 @@
+from schemas.cliente import ClienteSchema
