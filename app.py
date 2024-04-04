@@ -18,6 +18,8 @@ cliente_tag = Tag(name="cliente", description="adição, remoção e edição do
 
 @app.get('/')
 def documentacao():
+    """ Documentação da API
+    """
     return redirect('/openapi')
 
 @app.post("/cliente", tags=[cliente_tag],
@@ -73,7 +75,6 @@ def consulta_cliente(query: ConsultaClienteSchema):
         session.close()
 
 
-
 @app.put("/cliente", tags=[cliente_tag],
           responses={
               "200": ClienteViewSchema,
@@ -81,6 +82,8 @@ def consulta_cliente(query: ConsultaClienteSchema):
               "404": ErrorSchema
           })
 def atualiza_cliente(form: ClienteSchema):
+    """ Atualiza informações do cliente (Apenas nome, telefone e corretor)
+    """
     session = Session()
     cliente = session.query(Cliente).filter(Cliente.cpf == form.cpf).first()
 
@@ -101,5 +104,55 @@ def atualiza_cliente(form: ClienteSchema):
         session.close()
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+@app.delete("/cliente", tags=[cliente_tag], 
+            responses= {
+                "200": ClienteViewSchema,
+                "400": ErrorSchema,
+                "404": ErrorSchema
+            })
+def deletar_cliente(form: ConsultaClienteSchema):
+
+    """ Deleta o cliente do banco de dados
+    """
+    session = Session()
+    cliente = session.query(Cliente).filter(Cliente.cpf == form.cpf).first()
+
+    if not cliente:
+        return {"message": "cliente não encontrado"}, 404
+    
+    try:
+        session.delete(cliente)
+        session.commit()
+        return {
+            "message": "Cliente deletado",
+            "cliente": apresenta_cliente(cliente)
+        }, 200
+    
+    except Exception as e:
+        return {"message": "Erro ao deletar cliente"}, 400
+    finally:
+        session.close()
+
+
+@app.get("/clientes", tags=[cliente_tag], 
+         responses= {
+             "200": ListaClienteSchema,
+             "404": ErrorSchema,
+             "400": ErrorSchema
+         })
+def consultar_todos_clientes():
+    """ Retorna todos clientes cadastrados no banco
+    """
+    try:
+        session = Session()
+        clientes_response = session.query(Cliente).all()
+    except Exception as e:
+        return {"message": "erro ao consultar clientes"}, 400
+    finally:
+        session.close()
+
+    if not clientes_response:
+        return {"clientes": []}, 200
+    else:
+        return {"clientes": lista_clientes(clientes_response)}
+

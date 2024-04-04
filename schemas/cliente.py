@@ -1,4 +1,6 @@
 from pydantic import BaseModel, Field
+from model.cliente import Cliente
+from typing import List
 
 class ClienteSchema(BaseModel):
     """ Define como o cliente a ser inserido deve ser representado
@@ -30,7 +32,22 @@ def apresenta_cliente(cliente):
         "corretor": cliente.nome_corretor
     }
 
+def lista_clientes(clientes: List[Cliente]):
+
+    lista = []
+    for cliente in clientes:
+        lista.append(apresenta_cliente(cliente))
+    
+    return lista;
+    
+
 class ConsultaClienteSchema(BaseModel):
     """ Define o parâmetro da busca individual de clientes
     """
     cpf: str = Field("11122233300", description="CPF do Cliente")
+
+
+class ListaClienteSchema(BaseModel):
+    """ Retorna a lista de clientes cadastrados
+    """
+    clientes: list[ClienteViewSchema]
