@@ -1,4 +1,5 @@
 from flask_openapi3 import OpenAPI, Info, Tag
+from flask_cors import CORS
 from flask import redirect, request
 from sqlalchemy.exc import IntegrityError
 
@@ -12,6 +13,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 info = Info
 app = OpenAPI(__name__)
+CORS(app)
 
 
 cliente_tag = Tag(name="cliente", description="adição, remoção e edição do cliente na base da dados")
