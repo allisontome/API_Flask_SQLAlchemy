@@ -46,15 +46,15 @@ def cadastra_cliente(form: ClienteSchema):
     
     except Exception as e:
         return {"message": "Erro ao adicionar o cliente."}, 400
-    
-
-
-
-
+    finally:
+        session.close()
 
 
 @app.get("/cliente", tags=[cliente_tag],
-         responses= {"200": ClienteViewSchema, "400": ErrorSchema, "404": ErrorSchema })
+         responses= {
+             "200": ClienteViewSchema, 
+             "400": ErrorSchema, 
+             "404": ErrorSchema })
 def consulta_cliente(query: ConsultaClienteSchema):
     """ Consulta cliente individual por CPF
     """
@@ -69,6 +69,37 @@ def consulta_cliente(query: ConsultaClienteSchema):
         
     except Exception as e:
         return {"message": "Erro ao procurar cliente"}, 400
+    finally:
+        session.close()
+
+
+
+@app.put("/cliente", tags=[cliente_tag],
+          responses={
+              "200": ClienteViewSchema,
+              "400": ErrorSchema,
+              "404": ErrorSchema
+          })
+def atualiza_cliente(form: ClienteSchema):
+    session = Session()
+    cliente = session.query(Cliente).filter(Cliente.cpf == form.cpf).first()
+
+    if not cliente:
+        return {"message": "cliente não encontrado"}, 404
+    
+    try:
+        cliente.nome = form.nome
+        cliente.telefone = form.telefone
+        cliente.nome_corretor = form.nome_corretor
+
+        session.commit()
+        return apresenta_cliente(cliente), 200
+    
+    except Exception as e:
+        return {"message": "Erro ao atualizar cliente"}, 400
+    finally:
+        session.close()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
