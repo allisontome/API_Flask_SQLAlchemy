@@ -1,9 +1,14 @@
 from flask_openapi3 import OpenAPI, Info, Tag
-from flask import jsonify, redirect
+from flask import redirect, request
 from sqlalchemy.exc import IntegrityError
 
 from model import *
 from schemas import *
+
+
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 info = Info
 app = OpenAPI(__name__)
@@ -15,38 +20,55 @@ cliente_tag = Tag(name="cliente", description="adição, remoção e edição do
 def documentacao():
     return redirect('/openapi')
 
-@app.post("/cliente", tags=[cliente_tag])
+@app.post("/cliente", tags=[cliente_tag],
+          responses={
+              "200": ClienteViewSchema,
+              "400": ErrorSchema,
+              "409": ErrorSchema
+          })
 def cadastra_cliente(form: ClienteSchema):
+    """ Adiciona novo cliente à base de dados
+    """
     cliente = Cliente(
         nome = form.nome,
         cpf = form.cpf,
         telefone = form.telefone,
         nome_corretor = form.nome_corretor
     )
-    
     try:
+        session = Session()
         session.add(cliente)
         session.commit()
+        return apresenta_cliente(cliente), 200
 
-        return { "mensage": "cliente cadastrado"}, 200
-    
     except IntegrityError as e:
-
-        return { "mensage" : "cliente já cadastrado" }
-
-
-@app.get("/clientes", tags=[cliente_tag],
-         responses= {"200": ClienteSchema })
-def clientes():
-
-    clientes = session.query(Cliente).all()
-
-    if not clientes:
-        return { "clientes": [] }, 200
-    else:
-        return clientes
+        return { "message" : "cliente já cadastrado" }, 409
+    
+    except Exception as e:
+        return {"message": "Erro ao adicionar o cliente."}, 400
     
 
+
+
+
+
+
+@app.get("/cliente", tags=[cliente_tag],
+         responses= {"200": ClienteViewSchema, "400": ErrorSchema, "404": ErrorSchema })
+def consulta_cliente(query: ConsultaClienteSchema):
+    """ Consulta cliente individual por CPF
+    """
+    cpf = query.cpf
+    try:
+        session = Session()
+        cliente = session.query(Cliente).where(Cliente.cpf == cpf).first()
+        if cliente:
+            return apresenta_cliente(cliente), 200
+        else:
+            return {"message": "cliente não encontrado"}, 404
+        
+    except Exception as e:
+        return {"message": "Erro ao procurar cliente"}, 400
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

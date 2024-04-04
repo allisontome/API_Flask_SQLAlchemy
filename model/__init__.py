@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 import os
 
@@ -21,9 +21,8 @@ db_url = 'sqlite:///%s/db.sqlite3' % db
 # criando a engine do banco de dados
 engine = create_engine(db_url, echo=False)
 
-# Instancia do Session para iportação no app
-# session para comunicação com o banco
-session = Session(engine)
+# instância do session
+Session = sessionmaker(bind=engine)
 
 #verificando se o banco já existe
 if not database_exists(engine.url):
