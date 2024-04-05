@@ -18,6 +18,7 @@ CORS(app)
 
 cliente_tag = Tag(name="cliente", description="adição, remoção e edição do cliente na base da dados")
 
+
 @app.get('/')
 def documentacao():
     """ Documentação da API
@@ -62,10 +63,10 @@ def cadastra_cliente(form: ClienteSchema):
 def consulta_cliente(query: ConsultaClienteSchema):
     """ Consulta cliente individual por CPF
     """
-    cpf = query.cpf
     try:
         session = Session()
-        cliente = session.query(Cliente).where(Cliente.cpf == cpf).first()
+        cliente = session.query(Cliente).filter(Cliente.cpf == query.cpf).first()
+        print(cliente.cpf)
         if cliente:
             return apresenta_cliente(cliente), 200
         else:
@@ -83,11 +84,11 @@ def consulta_cliente(query: ConsultaClienteSchema):
               "400": ErrorSchema,
               "404": ErrorSchema
           })
-def atualiza_cliente(form: ClienteSchema):
+def atualiza_cliente(form: EditaClienteSchema):
     """ Atualiza informações do cliente (Apenas nome, telefone e corretor)
     """
     session = Session()
-    cliente = session.query(Cliente).filter(Cliente.cpf == form.cpf).first()
+    cliente = session.query(Cliente).filter(Cliente.id == form.id).first()
 
     if not cliente:
         return {"message": "cliente não encontrado"}, 404
@@ -112,12 +113,14 @@ def atualiza_cliente(form: ClienteSchema):
                 "400": ErrorSchema,
                 "404": ErrorSchema
             })
-def deletar_cliente(form: ConsultaClienteSchema):
+def deletar_cliente(query: DeletaClienteSchema):
 
     """ Deleta o cliente do banco de dados
     """
+
+    print(query)
     session = Session()
-    cliente = session.query(Cliente).filter(Cliente.cpf == form.cpf).first()
+    cliente = session.query(Cliente).filter(Cliente.id == query.id).first()
 
     if not cliente:
         return {"message": "cliente não encontrado"}, 404
@@ -158,3 +161,19 @@ def consultar_todos_clientes():
     else:
         return {"clientes": lista_clientes(clientes_response)}
 
+
+
+@app.post("/corretor")
+def cadastra_corretor(form: CorretorSchema):
+    corretor = Corretor(
+        nome_corretor = form.nome_corretor,
+        cpf = form.cpf,
+        telefone = form.telefone
+    )
+    try:
+        session = Session();
+        session.add(corretor)
+        session.commit()
+        return {"message": "corretor cadastrado"}
+    except Exception as e:
+        return {"message": "Erro ao cadastrar corretor"}
