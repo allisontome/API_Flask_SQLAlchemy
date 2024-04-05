@@ -17,9 +17,11 @@ CORS(app)
 
 
 cliente_tag = Tag(name="cliente", description="adição, remoção e edição do cliente na base da dados")
+corretor_tag = Tag(name="corretor", description="adição, consulta e exclusão de dados do corretor da base de dados")
+documentacao_tag = Tag(name="documentação", description="Consulta documentação da API")
 
 
-@app.get('/')
+@app.get('/', tags=[documentacao_tag])
 def documentacao():
     """ Documentação da API
     """
@@ -117,8 +119,6 @@ def deletar_cliente(query: DeletaClienteSchema):
 
     """ Deleta o cliente do banco de dados
     """
-
-    print(query)
     session = Session()
     cliente = session.query(Cliente).filter(Cliente.id == query.id).first()
 
@@ -163,8 +163,10 @@ def consultar_todos_clientes():
 
 
 
-@app.post("/corretor")
+@app.post("/corretor", tags=[corretor_tag])
 def cadastra_corretor(form: CorretorSchema):
+    """ Adiciona corretor a base de dados
+    """
     corretor = Corretor(
         nome_corretor = form.nome_corretor,
         cpf = form.cpf,
